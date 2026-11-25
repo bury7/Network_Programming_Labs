@@ -1,0 +1,66 @@
+{
+  "info": {
+    "name": "NBU exchange rates",
+    "description": "Official NBU exchange rates for the last 7 days.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "currency",
+      "value": "usd"
+    }
+  ],
+  "item": [
+    {
+      "name": "Exchange rates for the last week",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const pad = (value) => String(value).padStart(2, \"0\");",
+              "const format = (date) => `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;",
+              "const end = new Date();",
+              "const start = new Date(end);",
+              "start.setDate(end.getDate() - 6);",
+              "pm.collectionVariables.set(\"start\", format(start));",
+              "pm.collectionVariables.set(\"end\", format(end));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Response contains exchange rates\", () => {",
+              "    const rates = pm.response.json();",
+              "    pm.expect(rates).to.not.be.empty;",
+              "    rates.forEach((rate) => pm.expect(rate).to.include.keys(\"exchangedate\", \"cc\", \"rate\"));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "https://bank.gov.ua/NBU_Exchange/exchange_site?start={{start}}&end={{end}}&valcode={{currency}}&sort=exchangedate&order=asc&json",
+          "protocol": "https",
+          "host": ["bank", "gov", "ua"],
+          "path": ["NBU_Exchange", "exchange_site"],
+          "query": [
+            {"key": "start", "value": "{{start}}"},
+            {"key": "end", "value": "{{end}}"},
+            {"key": "valcode", "value": "{{currency}}"},
+            {"key": "sort", "value": "exchangedate"},
+            {"key": "order", "value": "asc"},
+            {"key": "json", "value": null}
+          ]
+        }
+      }
+    }
+  ]
+}
